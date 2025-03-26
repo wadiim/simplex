@@ -139,3 +139,35 @@ def perform_simplex(tableau: list[list[float]]) -> tuple[list[float], float]:
         perform_pivoting(tableau, pivot_row_idx, pivot_col_idx)
 
     return get_solution(tableau)
+
+
+def to_tableau(
+        goal_function: list[float],
+        constraints: list[list[float]],
+) -> list[list[float]]:
+    """
+    Returns a tableau for the given goal function and constraints.
+    """
+    # TODO: Add more details to the docstring.
+
+    result = []
+    var_count = len(goal_function)
+
+    for i, constraint in enumerate(constraints):
+        new_row = constraint[:-1]
+
+        # Add slack variables
+        for j in range(var_count+1):
+            new_row.append(1 if j == i else 0)
+
+        new_row.append(constraint[-1])
+        result.append(new_row)
+
+    bottom_row = [-x for x in goal_function]
+    for i in range(var_count):
+        bottom_row.append(0)
+    bottom_row.append(1)
+    bottom_row.append(0)
+    result.append(bottom_row)
+
+    return result
