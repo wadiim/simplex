@@ -83,6 +83,7 @@ class Plot(tk.Frame):
             p2 = (-b2/a2, 0.0)
 
             # Calculate the intersection point
+            assert (a1 - a2) != 0.0
             cx = -(b1 - b2)/(a1 - a2)
             cy = a1*cx + b1
 
@@ -103,13 +104,10 @@ class Plot(tk.Frame):
         self.canvas.draw()
 
 
-# TODO: Handle duplicated variable names.
-# TODO: Handle empty variable names and coefficients.
 # TODO: Center plus sign between adjacent goal function terms.
 # TODO: Vertically align variable entries with goal function entries.
 # TODO: Fix content of focused variable name entry being removed when using
 #       keyboard shortcut.
-# TODO: Restrict coefficient entry values to floating-point numbers.
 # TODO: Allow to switch between maximization and minimization.
 # TODO: Show the result in a label rather than in a popup window.
 # TODO: Handle constraints with >= inequality.
@@ -245,7 +243,12 @@ class Controls(tk.Frame):
             term_frame,
             width=self.VAR_ENTRY_WIDTH,
             font=self.font,
-        ).pack(side="left")
+            validate = "key",
+        )
+        term_mul_entry['validatecommand'] = (
+            term_mul_entry.register(self._validate_coefficient_input), "%P"
+        )
+        term_mul_entry.pack(side="left")
         term_var_label = tk.Label(
             term_frame,
             textvariable=self.var_names[len(self.var_entries)-1],
@@ -307,6 +310,11 @@ class Controls(tk.Frame):
             constraint_rhs_frame,
             width=self.VAR_ENTRY_WIDTH,
             font = self.font,
+            validate = "key",
+        )
+        constraint_rhs_entry['validatecommand'] = (
+            constraint_rhs_entry.register(self._validate_coefficient_input),
+            "%P",
         )
         constraint_rhs_entry.insert(0, "0")
         constraint_rhs_entry.pack(
@@ -337,7 +345,12 @@ class Controls(tk.Frame):
             term_frame,
             width=self.VAR_ENTRY_WIDTH,
             font=self.font,
-        ).pack(side="left")
+            validate = "key",
+        )
+        term_mul_entry['validatecommand'] = (
+            term_mul_entry.register(self._validate_coefficient_input), "%P"
+        )
+        term_mul_entry.pack(side="left")
         term_var_label = tk.Label(
             term_frame,
             textvariable=self.var_names[len(constraint_terms)],
@@ -359,9 +372,10 @@ class Controls(tk.Frame):
 
 
     def solve(self, event=None):
-        goal_function = [float(x) for x in self.get_goal_function_coefficients()]
+        goal_function = self.get_goal_function_coefficients()
         constraints = [
-            [float(x) for x in y] for y in self.get_constraints()
+            [float(x) if x != "-" else -1.0 for x in y]
+                for y in self.get_constraints()
         ]
         solution = perform_simplex(to_tableau(goal_function, constraints))
 
@@ -380,7 +394,9 @@ class Controls(tk.Frame):
         for term in self.goal_func_terms:
             for widget in term.winfo_children():
                 if widget.winfo_class() == 'Entry':
-                    coefficients.append(widget.get())
+                    coefficients.append(
+                        self._coefficient_str_to_float(widget.get())
+                    )
                     break
 
         return coefficients
@@ -396,17 +412,47 @@ class Controls(tk.Frame):
             for term_frame in term_frames:
                 for widget in term_frame.winfo_children():
                     if widget.winfo_class() == 'Entry':
-                        new_row.append(widget.get())
+                        new_row.append(
+                            self._coefficient_str_to_float(widget.get())
+                        )
                         break
 
             for widget in rhs.winfo_children():
                 if widget.winfo_class() == 'Entry':
-                    new_row.append(widget.get())
+                    new_row.append(
+                        self._coefficient_str_to_float(widget.get())
+                    )
                     break
 
             ret.append(new_row)
 
         return ret
+
+
+    def _coefficient_str_to_float(self, val):
+        if val == "":
+            return 1.0
+        elif val == "-":
+            return -1.0
+        else:
+            return float(val)
+
+
+    def _validate_identifier_input(self, input):
+        # TODO
+        pass
+
+
+    def _validate_coefficient_input(self, input):
+        if input == "" or input == "-":
+            return True
+
+        try:
+            float(input)
+        except ValueError:
+            return False
+
+        return True
 
 
 if __name__ == '__main__':
