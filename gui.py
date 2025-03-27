@@ -48,6 +48,8 @@ class Plot(tk.Frame):
         assert len(goal_function) == 2
         assert len(solution[0]) == 2
 
+        self.ax.clear()
+
         # Plot goal function
         point = solution[0]
         assert goal_function[0] != 0
