@@ -1,18 +1,83 @@
 import tkinter as tk
 import tkinter.messagebox
-from tkinter.font import Font
+import tkinter.font
+
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import (
+        FigureCanvasTkAgg,
+        NavigationToolbar2Tk
+)
 
 from simplex import *
+
+
+# TODO: Add plot's axes labels based on the currently set var names.
+class Plot(tk.Frame):
+
+    def __init__(self, master):
+        super().__init__(master)
+
+        self.pack(
+            side="top",
+            expand=True,
+        )
+
+        fig = plt.Figure(dpi=100)
+        self.ax = fig.add_subplot()
+
+        self.canvas = FigureCanvasTkAgg(fig, master=self)
+        self.canvas.draw()
+
+        toolbar = NavigationToolbar2Tk(self.canvas, self, pack_toolbar=False)
+        toolbar.update()
+
+        self.canvas.get_tk_widget().pack(
+            side=tkinter.TOP,
+            fill=tkinter.BOTH,
+            expand=True,
+            pady=0,
+        )
+        toolbar.pack(side=tkinter.TOP, fill=tkinter.X)
+
+
+    # TODO: Handle "functions" whose diagrams are in the form of vertical
+    #       lines.
+    def plot(self, goal_function, constraints, solution):
+        assert len(goal_function) == 2
+        assert len(solution[0]) == 2
+
+        # Plot goal function
+        point = solution[0]
+        assert goal_function[0] != 0
+        a = -goal_function[1] / goal_function[0]
+        b = point[1] - a*point[0]
+        xs = [0, -b/a]
+        ys = [a*x + b for x in xs]
+        self.ax.plot(xs, ys)
+
+        # Plot constraints' lines
+        for constraint in constraints:
+            assert constraint[0] != 0
+            a = -constraint[0] / constraint[1]
+            b = constraint[2] / constraint[1]
+            self.ax.axline((0, b), (1, a+b), linestyle='--')
+
+        # Draw the solution's point
+        self.ax.plot(solution[0][0], solution[0][1], marker='o', color='red')
+
+        self.ax.set_xlim(0)
+        self.ax.set_ylim(0)
+
+        self.canvas.draw()
 
 
 # TODO: Handle duplicated variable names.
 # TODO: Handle empty variable names and coefficients.
 # TODO: Center plus sign between adjacent goal function terms.
-# TODO: Align vertically variable entries with goal function entries.
+# TODO: Vertically align variable entries with goal function entries.
 # TODO: Fix content of focused variable name entry being removed when using
 #       keyboard shortcut.
 # TODO: Restrict coefficient entry values to floating-point numbers.
-# TODO: Plot the goal function and constrains if there are exactly 2 vars.
 # TODO: Allow to switch between maximization and minimization.
 # TODO: Show the result in a label rather than in a popup window.
 # TODO: Handle constraints with >= inequality.
@@ -20,15 +85,16 @@ class Controls(tk.Frame):
 
     BASE_PADDING = 16
     INIT_VAR_COUNT = 2
-    MAX_VAR_COUNT = 6
+    MAX_VAR_COUNT = 5
     MIN_VAR_COUNT = 2
     INIT_CONSTRAINT_COUNT = 2
-    MAX_CONSTRAINT_COUNT = 6
+    MAX_CONSTRAINT_COUNT = 5
     MIN_CONSTRAINT_COUNT = 2
     VAR_ENTRY_WIDTH = 4
 
-    def __init__(self, master):
+    def __init__(self, master, plot):
         super().__init__(master)
+        self.plot = plot
 
         self.pack(
             padx=self.BASE_PADDING,
@@ -36,7 +102,7 @@ class Controls(tk.Frame):
             expand=True,
         )
 
-        self.font = Font(self, size=16)
+        self.font = tkinter.font.Font(self, size=16)
 
         vars_label = tk.Label(self, text="Variables:", font=self.font)
         vars_label.grid(row=0, column=0)
@@ -267,6 +333,9 @@ class Controls(tk.Frame):
         ]
         solution = perform_simplex(to_tableau(goal_function, constraints))
 
+        if len(goal_function) == 2:
+            self.plot(goal_function, constraints, solution)
+
         tkinter.messagebox.showinfo(
             "Result",
             detail="{}".format(solution),
@@ -311,5 +380,6 @@ class Controls(tk.Frame):
 if __name__ == '__main__':
     root = tk.Tk()
     root.title("Simplex")
-    controls = Controls(root)
+    plot = Plot(root)
+    controls = Controls(root, plot.plot)
     root.mainloop()
