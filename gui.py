@@ -109,16 +109,15 @@ class Plot(tk.Frame):
 # TODO: Fix content of focused variable name entry being removed when using
 #       keyboard shortcut.
 # TODO: Allow to switch between maximization and minimization.
-# TODO: Show the result in a label rather than in a popup window.
 # TODO: Handle constraints with >= inequality.
 class Controls(tk.Frame):
 
     BASE_PADDING = 16
     INIT_VAR_COUNT = 2
-    MAX_VAR_COUNT = 5
+    MAX_VAR_COUNT = 4
     MIN_VAR_COUNT = 2
     INIT_CONSTRAINT_COUNT = 2
-    MAX_CONSTRAINT_COUNT = 5
+    MAX_CONSTRAINT_COUNT = 4
     MIN_CONSTRAINT_COUNT = 2
     VAR_ENTRY_WIDTH = 4
 
@@ -193,16 +192,48 @@ class Controls(tk.Frame):
         constraint_minus = tk.Button(constraint_button_frame, text="-")
         constraint_minus.bind('<Button-1>', self.decrement_constraint_count)
         master.bind('<Control-k>', self.decrement_constraint_count)
-        constraint_minus.pack(side="left", padx=(0.5*self.BASE_PADDING, 0))
+        constraint_minus.pack(
+            side="left",
+            padx=(0.5*self.BASE_PADDING, 0),
+            pady=0.5*self.BASE_PADDING,
+        )
         
         constraint_plus = tk.Button(constraint_button_frame, text="+")
         constraint_plus.bind('<Button-1>', self.increment_constraint_count)
         master.bind('<Control-j>', self.increment_constraint_count)
-        constraint_plus.pack(side="right", padx=(0.5*self.BASE_PADDING, 0))
+        constraint_plus.pack(
+            side="right",
+            padx=(0.5*self.BASE_PADDING, 0),
+            pady=0.5*self.BASE_PADDING,
+        )
 
-        solve_button = tk.Button(master, text="Solve")
+        solve_frame = tk.Frame(master)
+        solve_frame.pack(side="bottom", pady=self.BASE_PADDING)
+
+        solve_button = tk.Button(solve_frame, text="Solve", font=self.font)
         solve_button.bind('<Button-1>', self.solve)
-        solve_button.pack(side="bottom", pady=self.BASE_PADDING)
+        solve_button.grid(row=0, column=0, pady=self.BASE_PADDING)
+
+        tk.Label(
+            solve_frame,
+            text="Solution:",
+            font=self.font
+        ).grid(
+            row=0, column=1,
+            padx=(2*self.BASE_PADDING, 0.5*self.BASE_PADDING),
+            pady=self.BASE_PADDING
+        )
+
+        self.solution = tk.StringVar(master, "")
+
+        solution_label = tk.Label(
+            solve_frame,
+            textvariable = self.solution,
+            font=self.font,
+        ).grid(
+            row=0, column=2,
+            pady=self.BASE_PADDING,
+        )
 
 
     def decrement_var_count(self, _):
@@ -382,9 +413,12 @@ class Controls(tk.Frame):
         if len(goal_function) == 2:
             self.plot(goal_function, constraints, solution)
 
-        tkinter.messagebox.showinfo(
-            "Result",
-            detail="{}".format(solution),
+        self.solution.set(
+            "("
+            + ", ".join(str(x) for x in solution[0])
+            + ")"
+            + " = "
+            + str(solution[1])
         )
 
 
