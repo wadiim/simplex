@@ -40,6 +40,8 @@ class Plot(tk.Frame):
         toolbar.pack(side=tkinter.TOP, fill=tkinter.X)
 
 
+    # TODO: Fix the goal function not being plotted when its coefficients
+    #       have different signs.
     def plot(self, goal_function, constraints, solution):
         assert len(goal_function) == 2
         assert len(solution[0]) == 2
@@ -84,7 +86,7 @@ class Plot(tk.Frame):
 # TODO: Center plus sign between adjacent goal function terms.
 # TODO: Fix content of focused variable name entry being removed when using
 #       keyboard shortcut.
-# TODO: Allow to switch between maximization and minimization.
+# TODO: Fix focus traversal order when using TAB.
 class Controls(tk.Frame):
 
     BASE_PADDING = 16
@@ -151,8 +153,19 @@ class Controls(tk.Frame):
         )
         goal_func_label.grid(row=1, column=0)
 
-        max_or_min_label = tk.Label(self, text="→ max", font=self.font)
-        max_or_min_label.grid(
+        max_or_min_frame = tk.Frame(self)
+        arrow_label = tk.Label(
+            max_or_min_frame,
+            text="→ ",
+            font=self.font,
+        ).pack(side="left")
+        self.opt_method = tk.StringVar(master, "max")
+        max_or_min_menu = tk.OptionMenu(
+            max_or_min_frame,
+            self.opt_method,
+            "max", "min",
+        ).pack(side="right")
+        max_or_min_frame.grid(
             row=1,
             column=self.MAX_VAR_COUNT+1,
             padx=(2*self.BASE_PADDING, 0),
@@ -402,6 +415,9 @@ class Controls(tk.Frame):
 
     def solve(self, event=None):
         goal_function = self.get_goal_function_coefficients()
+        if self.opt_method.get() == "min":
+            goal_function = [-x for x in goal_function]
+
         constraints = [
             [float(x) if x != "-" else -1.0 for x in y]
                 for y in self.get_constraints()
