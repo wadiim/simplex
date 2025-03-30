@@ -20,10 +20,7 @@ class Plot(tk.Frame):
     def __init__(self, master):
         super().__init__(master)
 
-        self.pack(
-            side="top",
-            expand=True,
-        )
+        self.pack(side="top", expand=True)
 
         fig = plt.Figure(dpi=100)
         self.ax = fig.add_subplot()
@@ -234,9 +231,9 @@ class Controls(tk.Frame):
         var_name_entry = tk.Entry(
             self,
             width=self.VAR_ENTRY_WIDTH,
-            textvariable = self.var_names[len(self.var_entries)],
+            textvariable=self.var_names[len(self.var_entries)],
             font=self.font,
-            validate = "key",
+            validate="key",
         )
         var_name_entry['validatecommand'] = (
             var_name_entry.register(self._validate_identifier_input), "%P"
@@ -258,7 +255,7 @@ class Controls(tk.Frame):
             term_frame,
             width=self.VAR_ENTRY_WIDTH,
             font=self.font,
-            validate = "key",
+            validate="key",
         )
         term_mul_entry['validatecommand'] = (
             term_mul_entry.register(self._validate_coefficient_input), "%P"
@@ -307,7 +304,7 @@ class Controls(tk.Frame):
             font=self.font,
         )
         constraint_label.grid(
-            row=new_id + 2,
+            row=new_id+2,
             column=0,
         )
 
@@ -317,15 +314,15 @@ class Controls(tk.Frame):
 
         constraint_rhs_frame = tk.Frame(self)
         constraint_rhs_frame.grid(
-            row=new_id + 2,
+            row=new_id+2,
             column=self.MAX_VAR_COUNT+1,
             padx=(2*self.BASE_PADDING, 0),
         )
         constraint_rhs_entry = tk.Entry(
             constraint_rhs_frame,
             width=self.VAR_ENTRY_WIDTH,
-            font = self.font,
-            validate = "key",
+            font=self.font,
+            validate="key",
         )
         constraint_rhs_entry['validatecommand'] = (
             constraint_rhs_entry.register(self._validate_coefficient_input),
@@ -360,7 +357,7 @@ class Controls(tk.Frame):
             term_frame,
             width=self.VAR_ENTRY_WIDTH,
             font=self.font,
-            validate = "key",
+            validate="key",
         )
         term_mul_entry['validatecommand'] = (
             term_mul_entry.register(self._validate_coefficient_input), "%P"
@@ -372,7 +369,7 @@ class Controls(tk.Frame):
             font=self.font,
         ).pack(side="right")
         term_frame.grid(
-            row=constraint_id + 2,
+            row=constraint_id+2,
             column=len(constraint_terms)+1,
             padx=(2*self.BASE_PADDING, 0),
             pady=0.5*self.BASE_PADDING,
