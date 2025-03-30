@@ -267,6 +267,10 @@ class Controls(tk.Frame):
             width=self.VAR_ENTRY_WIDTH,
             textvariable = self.var_names[len(self.var_entries)],
             font=self.font,
+            validate = "key",
+        )
+        var_name_entry['validatecommand'] = (
+            var_name_entry.register(self._validate_identifier_input), "%P"
         )
         var_name_entry.grid(
             row=0,
@@ -484,8 +488,15 @@ class Controls(tk.Frame):
 
 
     def _validate_identifier_input(self, input):
-        # TODO
-        pass
+        if input == "":
+            return True
+        if input[0].isnumeric():
+            return False
+        if not input.isalnum():
+            return False
+        if len(input) > 3:
+            return False
+        return True
 
 
     def _validate_coefficient_input(self, input):
