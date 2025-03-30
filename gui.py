@@ -13,7 +13,8 @@ from simplex import *
 
 # TODO: Add plot's axes labels based on the currently set var names.
 # TODO: Colorize the constraints' functions with different colors.
-# TODO: Add a legend.
+# TODO: Add solution's space colorization.
+# TODO: Add a diagram legend.
 class Plot(tk.Frame):
 
     def __init__(self, master):
@@ -73,38 +74,6 @@ class Plot(tk.Frame):
                 b = constraint[2] / constraint[0]
                 constraints_data.append((0, b))
                 self.ax.axvline(b, linestyle='--')
-
-        # Colorize the solution's space
-        # TODO: Fix the colorization
-        if len(constraints) == 2 \
-                and constraints[0][0] != 0 \
-                and constraints[1][0] != 0 \
-                and constraints_data[0][0] != 0 \
-                and constraints_data[1][0] != 0:
-            # Ensure the first `constraints_data` element represents the
-            # constraint with ascending function.
-            if constraints_data[0][0] < constraints_data[1][0]:
-                constraints_data[0], constraints_data[1] \
-                        = constraints_data[1], constraints_data[0]
-
-            a1, b1 = constraints_data[0]
-            a2, b2 = constraints_data[1]
-
-            p1 = (-b1/a1, 0.0)
-            p2 = (-b2/a2, 0.0)
-
-            # Calculate the intersection point
-            assert (a1 - a2) != 0.0
-            cx = -(b1 - b2)/(a1 - a2)
-            cy = a1*cx + b1
-
-            if cy > 0:
-                self.ax.fill_between(
-                    [p1[0], cx, p2[0]],
-                    [p1[1], cy, p2[1]],
-                    color='grey',
-                    alpha=0.3,
-                )
 
         # Draw the solution's point
         self.ax.plot(solution[0][0], solution[0][1], marker='o', color='red')
