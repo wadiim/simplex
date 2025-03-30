@@ -42,8 +42,6 @@ class Plot(tk.Frame):
         toolbar.pack(side=tkinter.TOP, fill=tkinter.X)
 
 
-    # TODO: Handle "functions" whose diagrams are in the form of vertical
-    #       lines.
     def plot(self, goal_function, constraints, solution):
         assert len(goal_function) == 2
         assert len(solution[0]) == 2
@@ -52,24 +50,37 @@ class Plot(tk.Frame):
 
         # Plot goal function
         point = solution[0]
-        assert goal_function[0] != 0
-        a = -goal_function[1] / goal_function[0]
-        b = point[1] - a*point[0]
-        xs = [0, -b/a]
-        ys = [a*x + b for x in xs]
-        self.ax.plot(xs, ys)
+        if goal_function[0] != 0 and goal_function[1] != 0:
+            a = -goal_function[1] / goal_function[0]
+            b = point[1] - a*point[0]
+            xs = [0, -b/a]
+            ys = [a*x + b for x in xs]
+            self.ax.plot(xs, ys)
+        elif goal_function[0] == 0:
+            self.ax.axhline(point[1])
+        else:
+            self.ax.axvline(point[0])
 
         # Plot constraints' lines
         constraints_data = []
         for constraint in constraints:
-            assert constraint[0] != 0
-            a = -constraint[0] / constraint[1]
-            b = constraint[2] / constraint[1]
-            constraints_data.append((a, b))
-            self.ax.axline((0, b), (1, a+b), linestyle='--')
+            if constraint[1] != 0:
+                a = -constraint[0] / constraint[1]
+                b = constraint[2] / constraint[1]
+                constraints_data.append((a, b))
+                self.ax.axline((0, b), (1, a+b), linestyle='--')
+            elif constraint[0] != 0:
+                b = constraint[2] / constraint[0]
+                constraints_data.append((0, b))
+                self.ax.axvline(b, linestyle='--')
 
         # Colorize the solution's space
-        if len(constraints) == 2:
+        # TODO: Fix the colorization
+        if len(constraints) == 2 \
+                and constraints[0][0] != 0 \
+                and constraints[1][0] != 0 \
+                and constraints_data[0][0] != 0 \
+                and constraints_data[1][0] != 0:
             # Ensure the first `constraints_data` element represents the
             # constraint with ascending function.
             if constraints_data[0][0] < constraints_data[1][0]:
