@@ -85,7 +85,6 @@ class Plot(tk.Frame):
 # TODO: Fix content of focused variable name entry being removed when using
 #       keyboard shortcut.
 # TODO: Allow to switch between maximization and minimization.
-# TODO: Handle constraints with >= inequality.
 class Controls(tk.Frame):
 
     BASE_PADDING = 16
@@ -353,7 +352,7 @@ class Controls(tk.Frame):
         constraint_rhs_inequality_menu = tk.OptionMenu(
             constraint_rhs_frame,
             self.inequalities[new_id-1],
-            "<=",
+            "<=", ">=",
         ).pack(
             side="left",
             padx=(0.5*self.BASE_PADDING, 0),
@@ -407,9 +406,17 @@ class Controls(tk.Frame):
             [float(x) if x != "-" else -1.0 for x in y]
                 for y in self.get_constraints()
         ]
-        solution = perform_simplex(to_tableau(goal_function, constraints))
+        for i in range(len(constraints)):
+            if self.inequalities[i].get() == ">=":
+                constraints[i] = [-x for x in constraints[i]]
 
-        if len(goal_function) == 2:
+        # TODO: Fix perform_simplex() to always return solution with correct
+        #       number of coefficients. Now, the number of coefficients is
+        #       equal to the number of constraints.
+        solution = perform_simplex(to_tableau(goal_function, constraints))
+        solution = (solution[0][:len(goal_function)], solution[1])
+
+        if len(goal_function) == 2 and len(solution[0]) == 2:
             self.plot(goal_function, constraints, solution)
 
         self.solution.set(
