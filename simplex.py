@@ -151,20 +151,19 @@ def to_tableau(
     # TODO: Add more details to the docstring.
 
     result = []
-    var_count = len(goal_function)
 
     for i, constraint in enumerate(constraints):
         new_row = constraint[:-1]
 
         # Add slack variables
-        for j in range(var_count+1):
+        for j in range(len(constraints)+1):
             new_row.append(1 if j == i else 0)
 
         new_row.append(constraint[-1])
         result.append(new_row)
 
     bottom_row = [-x for x in goal_function]
-    for i in range(var_count):
+    for i in range(len(constraints)):
         bottom_row.append(0)
     bottom_row.append(1)
     bottom_row.append(0)

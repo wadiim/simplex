@@ -196,7 +196,7 @@ class TestSimplex:
         assert perform_simplex(tableau) == ([4, 8], 400)
 
 
-    def test_to_tableau(self):
+    def test_to_tableau_if_var_count_equals_constraint_count(self):
         goal_function = [40.0, 30.0] # Z = 40x1 + 30x2
         constraints = [
             [1, 1, 12], # x1 + x2 <= 12
@@ -207,6 +207,40 @@ class TestSimplex:
             [1, 1, 1, 0, 0, 12],
             [2, 1, 0, 1, 0, 16],
             [-40, -30, 0, 0, 1, 0],
+        ]
+
+        assert to_tableau(goal_function, constraints) == expected
+
+
+    def test_to_tableau_if_var_count_greater_than_constraint_count(self):
+        goal_function = [40.0, 30.0, 20.0]
+        constraints = [
+            [1, 1, 3, 12],
+            [2, 1, 0, 16],
+        ]
+
+        expected = [
+            [  1,   1,   3, 1, 0, 0, 12],
+            [  2,   1,   0, 0, 1, 0, 16],
+            [-40, -30, -20, 0, 0, 1,  0],
+        ]
+
+        assert to_tableau(goal_function, constraints) == expected
+
+
+    def test_to_tableau_if_var_count_less_than_constraint_count(self):
+        goal_function = [40.0, 30.0]
+        constraints = [
+            [1, 1, 12],
+            [2, 1, 16],
+            [0, 2, 11],
+        ]
+
+        expected = [
+            [  1,   1, 1, 0, 0, 0, 12],
+            [  2,   1, 0, 1, 0, 0, 16],
+            [  0,   2, 0, 0, 1, 0, 11],
+            [-40, -30, 0, 0, 0, 1,  0],
         ]
 
         assert to_tableau(goal_function, constraints) == expected
