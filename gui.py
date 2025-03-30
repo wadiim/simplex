@@ -40,8 +40,6 @@ class Plot(tk.Frame):
         toolbar.pack(side=tkinter.TOP, fill=tkinter.X)
 
 
-    # TODO: Fix the goal function not being plotted when its coefficients
-    #       have different signs.
     def plot(self, goal_function, constraints, solution):
         assert len(goal_function) == 2
         assert len(solution[0]) == 2
@@ -53,9 +51,8 @@ class Plot(tk.Frame):
         if goal_function[0] != 0 and goal_function[1] != 0:
             a = -goal_function[1] / goal_function[0]
             b = point[1] - a*point[0]
-            xs = [0, -b/a]
-            ys = [a*x + b for x in xs]
-            self.ax.plot(xs, ys)
+            xys = [(x, a*x + b) for x in range(2)]
+            self.ax.axline(xys[0], xys[1])
         elif goal_function[0] == 0:
             self.ax.axhline(point[1])
         else:
