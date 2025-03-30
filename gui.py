@@ -82,7 +82,6 @@ class Plot(tk.Frame):
 
 
 # TODO: Center plus sign between adjacent goal function terms.
-# TODO: Vertically align variable entries with goal function entries.
 # TODO: Fix content of focused variable name entry being removed when using
 #       keyboard shortcut.
 # TODO: Allow to switch between maximization and minimization.
@@ -97,6 +96,7 @@ class Controls(tk.Frame):
     MAX_CONSTRAINT_COUNT = 4
     MIN_CONSTRAINT_COUNT = 2
     VAR_ENTRY_WIDTH = 4
+    MAX_VAR_NAME_LEN = 3
 
     def __init__(self, master, plot):
         super().__init__(master)
@@ -121,7 +121,7 @@ class Controls(tk.Frame):
             tk.StringVar(master, "<=") for i in range(self.MAX_VAR_COUNT)
         ]
         self.constraints = []
-        self.var_entries = []
+        self.var_entry_frames = []
         self.goal_func_terms = []
         for i in range(self.INIT_VAR_COUNT):
             self.increment_var_count()
@@ -148,7 +148,7 @@ class Controls(tk.Frame):
         goal_func_label = tk.Label(
             self,
             text="Goal function:",
-            font=self.font
+            font=self.font,
         )
         goal_func_label.grid(row=1, column=0)
 
@@ -214,10 +214,10 @@ class Controls(tk.Frame):
 
 
     def decrement_var_count(self, _):
-        if len(self.var_entries) <= self.MIN_VAR_COUNT: return
+        if len(self.var_entry_frames) <= self.MIN_VAR_COUNT: return
 
-        self.var_entries[-1].grid_forget()
-        self.var_entries.pop()
+        self.var_entry_frames[-1].grid_forget()
+        self.var_entry_frames.pop()
 
         self.goal_func_terms[-1].grid_forget()
         self.goal_func_terms.pop()
@@ -226,30 +226,46 @@ class Controls(tk.Frame):
 
 
     def increment_var_count(self, _=None):
-        if len(self.var_entries) >= self.MAX_VAR_COUNT: return
+        if len(self.var_entry_frames) >= self.MAX_VAR_COUNT: return
+
+        var_name_entry_frame = tk.Frame(self)
+        if len(self.var_entry_frames) >= 1:
+            # For alignment purposes only.
+            tk.Label(
+                var_name_entry_frame, width=1, font=self.font,
+            ).pack(side="left")
 
         var_name_entry = tk.Entry(
-            self,
+            var_name_entry_frame,
             width=self.VAR_ENTRY_WIDTH,
-            textvariable=self.var_names[len(self.var_entries)],
+            textvariable=self.var_names[len(self.var_entry_frames)],
             font=self.font,
             validate="key",
         )
         var_name_entry['validatecommand'] = (
             var_name_entry.register(self._validate_identifier_input), "%P"
         )
-        var_name_entry.grid(
+        var_name_entry.pack(side="left")
+
+        # For alignment purposes only.
+        tk.Label(
+            var_name_entry_frame,
+            width=self.MAX_VAR_NAME_LEN,
+            font=self.font,
+        ).pack(side="right")
+
+        var_name_entry_frame.grid(
             row=0,
-            column=len(self.var_entries)+1,
+            column=len(self.var_entry_frames)+1,
             padx=(2*self.BASE_PADDING, 0),
             pady=0.5*self.BASE_PADDING,
         )
-        self.var_entries.append(var_name_entry)
+        self.var_entry_frames.append(var_name_entry_frame)
 
         term_frame = tk.Frame(self)
-        if (len(self.var_entries) > 1):
+        if (len(self.var_entry_frames) > 1):
             term_plus_label = tk.Label(
-                term_frame, text="+", font=self.font
+                term_frame, text="+", font=self.font,
             ).pack(side="left")
         term_mul_entry = tk.Entry(
             term_frame,
@@ -263,7 +279,8 @@ class Controls(tk.Frame):
         term_mul_entry.pack(side="left")
         term_var_label = tk.Label(
             term_frame,
-            textvariable=self.var_names[len(self.var_entries)-1],
+            textvariable=self.var_names[len(self.var_entry_frames)-1],
+            width=self.MAX_VAR_NAME_LEN,
             font=self.font,
         ).pack(side="right")
         term_frame.grid(
@@ -309,7 +326,7 @@ class Controls(tk.Frame):
         )
 
         constraint_terms = []
-        for _ in range(len(self.var_entries)):
+        for _ in range(len(self.var_entry_frames)):
             self.add_constraint_term(constraint_terms, new_id)
 
         constraint_rhs_frame = tk.Frame(self)
@@ -366,6 +383,7 @@ class Controls(tk.Frame):
         term_var_label = tk.Label(
             term_frame,
             textvariable=self.var_names[len(constraint_terms)],
+            width=self.MAX_VAR_NAME_LEN,
             font=self.font,
         ).pack(side="right")
         term_frame.grid(
@@ -460,7 +478,7 @@ class Controls(tk.Frame):
             return False
         if not input.isalnum():
             return False
-        if len(input) > 3:
+        if len(input) > self.MAX_VAR_NAME_LEN:
             return False
         return True
 
