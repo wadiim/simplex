@@ -2,99 +2,64 @@
 This file contains the implementation of the simplex method.
 """
 
-class InvalidPivotRowIndex(Exception):
-    pass
-
-
-class InvalidPivotColumnIndex(Exception):
-    pass
-
-
-def get_pivot_col_idx(tableau: list[list[float]]) -> int:
+def get_pivot_pos(tableau: list[list[float]]) -> tuple[int, int] | None:
     """
-    Returns the index of the pivot column of a given tableau or -1 if there
-    is no such column.
+    Returns the position of the pivot element or None if there is no such
+    element.
     """
 
-    pivot_col_idx = -1
+    # Find column position
+    col_idx = None
     for idx, val in enumerate(tableau[-1]):
-        if val < 0 and (pivot_col_idx == -1 or val < tableau[-1][pivot_col_idx]):
-            pivot_col_idx = idx
+        if val >= 0: continue
+        if col_idx == None or val < tableau[-1][col_idx]:
+            col_idx = idx
 
-    return pivot_col_idx
+    if col_idx == None: return None
 
+    # Find row position
+    quotients = [float('inf') for _ in range(len(tableau))]
+    for idx in range(len(tableau)):
+        numerator = tableau[idx][-1]
+        denominator = tableau[idx][col_idx]
+        if denominator == 0.0: continue
+        val = numerator / denominator
+        if val <= 0.0: continue
+        quotients[idx] = val
+    row_idx = 0
+    for idx in range(len(quotients)):
+        if quotients[idx] < quotients[row_idx]:
+            row_idx = idx
 
-# TODO: Merge `get_pivot_row_idx()` with `get_pivot_col_idx()` in order to
-#       avoid checking if `pivot_col_idx` is valid.
-def get_pivot_row_idx(tableau: list[list[float]], pivot_col_idx: int) -> int:
-    """
-    Returns the index of the pivot row of a given tableau or -1 if there is
-    no such row.
-    """
+    if quotients[row_idx] == float('inf'): return None
 
-    # Calculate quotients
-    # NOTE: Quotients that are 0, negative, or that have 0 in the denominator
-    #       are ignored.
-    if len(tableau) == 0 or len(tableau[0]) == 0:
-        return -1
-
-    try:
-        quotients = [float('inf') for _ in range(len(tableau))]
-
-        for idx in range(len(tableau)):
-            numerator = tableau[idx][-1]
-            denominator = tableau[idx][pivot_col_idx]
-            if denominator == 0.0: continue
-
-            val = numerator / denominator
-            if val <= 0.0: continue
-
-            quotients[idx] = val
-
-        min_quotient_idx = 0
-        for idx in range(len(quotients)):
-            if quotients[idx] < quotients[min_quotient_idx]:
-                min_quotient_idx = idx
-
-        min_quotient = quotients[min_quotient_idx]
-        return min_quotient_idx if min_quotient < float('inf') else -1
-    except IndexError:
-        raise InvalidPivotColumnIndex
+    return (row_idx, col_idx)
 
 
-# TODO: Make determining the pivot row and column indexes part of
-#       `perform_pivoting()` instead of passing them as parameters in order
-#       to avoid checking if they are valid.
-def perform_pivoting(
-        tableau: list[list[float]],
-        pivot_row_idx: float,
-        pivot_col_idx: float,
-):
+def perform_pivoting(tableau: list[list[float]]):
     """
     Performs pivoting on the tableau, i.e. a process of obtaining a 1 in the
     location of the pivot element, and then making all other entries 0 in the
     pivot column. The given tableau is modified in place.
     """
 
-    if not (0 <= pivot_row_idx <= len(tableau)):
-        raise InvalidPivotRowIndex
+    pos = get_pivot_pos(tableau)
+    if pos == None: return
+    pivot_row_idx, pivot_col_idx = pos
 
-    try:
-        # Make the pivot element a 1:
-        pivot = tableau[pivot_row_idx][pivot_col_idx]
-        tableau[pivot_row_idx] = [x/pivot for x in tableau[pivot_row_idx]]
+    # Make the pivot element a 1:
+    pivot = tableau[pivot_row_idx][pivot_col_idx]
+    tableau[pivot_row_idx] = [x/pivot for x in tableau[pivot_row_idx]]
 
-        # Make all other entries 0 in the pivot column:
-        for row_idx in range(len(tableau)):
-            if row_idx == pivot_row_idx: continue
+    # Make all other entries 0 in the pivot column:
+    for row_idx in range(len(tableau)):
+        if row_idx == pivot_row_idx: continue
 
-            multiplier = tableau[row_idx][pivot_col_idx]
+        multiplier = tableau[row_idx][pivot_col_idx]
 
-            for col_idx, col_val in enumerate(tableau[row_idx]):
-                pivot_row_val = tableau[pivot_row_idx][col_idx]
-                tableau[row_idx][col_idx] = col_val - multiplier*pivot_row_val
-    except IndexError:
-        raise InvalidPivotColumnIndex
+        for col_idx, col_val in enumerate(tableau[row_idx]):
+            pivot_row_val = tableau[pivot_row_idx][col_idx]
+            tableau[row_idx][col_idx] = col_val - multiplier*pivot_row_val
 
 
 def is_basic(column: list[float]) -> bool:
@@ -124,19 +89,18 @@ def get_solution(tableau: list[list[float]]) -> tuple[list[float], float]:
     return solution, tableau[-1][-1]
 
 
+def can_be_improved(tableau: list[list[float]]) -> bool:
+    z = tableau[-1]
+    return any(x < 0 for x in z[:-1])
+
+
 def perform_simplex(tableau: list[list[float]]) -> tuple[list[float], float]:
     """
     Returns the solution for the given tableau.
     """
 
-    while True:
-        pivot_col_idx = get_pivot_col_idx(tableau)
-        if pivot_col_idx == -1: break
-
-        pivot_row_idx = get_pivot_row_idx(tableau, pivot_col_idx)
-        if pivot_row_idx == -1: break
-
-        perform_pivoting(tableau, pivot_row_idx, pivot_col_idx)
+    while can_be_improved(tableau):
+        perform_pivoting(tableau)
 
     return get_solution(tableau)
 
@@ -147,8 +111,13 @@ def to_tableau(
 ) -> list[list[float]]:
     """
     Returns a tableau for the given goal function and constraints.
+    The `goal_function` is the list of subsequent goal function's
+    coefficients, e.g. [3, 2, 5] represents the following function:
+    Z = 3*x1 + 2*x2 + 5*x3. `constraints` is the list of constraints, where
+    each item is a list of coefficients of the according constraint and the
+    free term as the last element, e.g. [2, 1, 7, 12] represents the
+    following constraint: 2*x1 + 1*x2 + 7*x3 <= 12.
     """
-    # TODO: Add more details to the docstring.
 
     result = []
 
@@ -156,17 +125,14 @@ def to_tableau(
         new_row = constraint[:-1]
 
         # Add slack variables
-        for j in range(len(constraints)+1):
-            new_row.append(1 if j == i else 0)
+        new_row += [1 if j == i else 0 for j in range(len(constraints) + 1)]
 
         new_row.append(constraint[-1])
         result.append(new_row)
 
-    bottom_row = [-x for x in goal_function]
-    for i in range(len(constraints)):
-        bottom_row.append(0)
-    bottom_row.append(1)
-    bottom_row.append(0)
+    bottom_row =  [-x for x in goal_function]
+    bottom_row += [0 for _ in range(len(constraints))]
+    bottom_row += [1, 0]
     result.append(bottom_row)
 
     return result
