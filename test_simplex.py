@@ -139,7 +139,7 @@ class TestSimplex:
         assert get_solution(tableau) == ([4, 8], 400)
 
 
-    def test_perform_simplex(self):
+    def test_perform_simplex_when_feasible_and_bounded(self):
         # Problem I:
         tableau = [
             [-2, 1, 1, 0, 0, 2],
@@ -157,6 +157,16 @@ class TestSimplex:
         ]
 
         assert perform_simplex(tableau) == ([4, 8], 400)
+
+
+    def test_perform_simplex_when_unbounded(self):
+        tableau = [
+            [ 1,   0, 1, 0, 0, 7], # x1      <= 7
+            [ 1,  -1, 0, 1, 0, 8], # x1 - x2 <= 8
+            [-5,  -4, 0, 0, 1, 0], # Z = 5x1 + 4x2
+        ]
+
+        assert perform_simplex(tableau) == ([float('inf'), float('inf')], float('inf'))
 
 
     def test_to_tableau_if_var_count_equals_constraint_count(self):

@@ -48,15 +48,16 @@ class Plot(tk.Frame):
 
         # Plot goal function
         point = solution[0]
-        if goal_function[0] != 0 and goal_function[1] != 0:
-            a = -goal_function[1] / goal_function[0]
-            b = point[1] - a*point[0]
-            xys = [(x, a*x + b) for x in range(2)]
-            self.ax.axline(xys[0], xys[1])
-        elif goal_function[0] == 0:
-            self.ax.axhline(point[1])
-        else:
-            self.ax.axvline(point[0])
+        if solution[0] != [float('inf'), float('inf')]:
+            if goal_function[0] != 0 and goal_function[1] != 0:
+                a = -goal_function[1] / goal_function[0]
+                b = point[1] - a*point[0]
+                xys = [(x, a*x + b) for x in range(2)]
+                self.ax.axline(xys[0], xys[1])
+            elif goal_function[0] == 0:
+                self.ax.axhline(point[1])
+            else:
+                self.ax.axvline(point[0])
 
         # Plot constraints' lines
         constraints_data = []
@@ -72,7 +73,9 @@ class Plot(tk.Frame):
                 self.ax.axvline(b, linestyle='--')
 
         # Draw the solution's point
-        self.ax.plot(solution[0][0], solution[0][1], marker='o', color='red')
+        x, y = solution[0]
+        if x != float('inf') and y != float('inf'):
+            self.ax.plot(x, y, marker='o', color='red')
 
         self.ax.set_xlim(0)
         self.ax.set_ylim(0)
@@ -434,11 +437,15 @@ class Controls(tk.Frame):
 
         self.solution.set(
             "("
-            + ", ".join(str(x) for x in solution[0])
+            + ", ".join(self._var_val_to_str(x) for x in solution[0])
             + ")"
             + " = "
-            + str(solution[1])
+            + self._var_val_to_str(solution[1])
         )
+
+
+    def _var_val_to_str(self, x):
+        return str(x) if x != float('inf') else "∞"
 
 
     def get_goal_function_coefficients(self):

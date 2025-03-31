@@ -36,7 +36,7 @@ def get_pivot_pos(tableau: list[list[float]]) -> tuple[int, int] | None:
     return (row_idx, col_idx)
 
 
-def perform_pivoting(tableau: list[list[float]]):
+def perform_pivoting(tableau: list[list[float]]) -> bool:
     """
     Performs pivoting on the tableau, i.e. a process of obtaining a 1 in the
     location of the pivot element, and then making all other entries 0 in the
@@ -44,7 +44,7 @@ def perform_pivoting(tableau: list[list[float]]):
     """
 
     pos = get_pivot_pos(tableau)
-    if pos == None: return
+    if pos == None: return False
     pivot_row_idx, pivot_col_idx = pos
 
     # Make the pivot element a 1:
@@ -60,6 +60,8 @@ def perform_pivoting(tableau: list[list[float]]):
         for col_idx, col_val in enumerate(tableau[row_idx]):
             pivot_row_val = tableau[pivot_row_idx][col_idx]
             tableau[row_idx][col_idx] = col_val - multiplier*pivot_row_val
+
+    return True
 
 
 def is_basic(column: list[float]) -> bool:
@@ -100,7 +102,11 @@ def perform_simplex(tableau: list[list[float]]) -> tuple[list[float], float]:
     """
 
     while can_be_improved(tableau):
-        perform_pivoting(tableau)
+        if not perform_pivoting(tableau):
+            return (
+                [float('inf') for _ in range(len(tableau[:-1]))],
+                float('inf'),
+            )
 
     return get_solution(tableau)
 
