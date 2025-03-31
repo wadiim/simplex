@@ -50,7 +50,7 @@ class Plot(tk.Frame):
         point = solution[0]
         if solution[0] != [float('inf'), float('inf')]:
             if goal_function[0] != 0 and goal_function[1] != 0:
-                a = -goal_function[1] / goal_function[0]
+                a = -goal_function[0] / goal_function[1]
                 b = point[1] - a*point[0]
                 xys = [(x, a*x + b) for x in range(2)]
                 self.ax.axline(xys[0], xys[1])
