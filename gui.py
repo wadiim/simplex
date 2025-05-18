@@ -415,13 +415,13 @@ class Controls(tk.Frame):
 
     def solve(self, event=None):
         goal_function = self.get_goal_function_coefficients()
-        if self.opt_method.get() == "min":
-            goal_function = [-x for x in goal_function]
+        mode = Mode.MINIMIZATION if self.opt_method.get() == "min" else Mode.MAXIMIZATION
 
         constraints = [
             [float(x) if x != "-" else -1.0 for x in y]
                 for y in self.get_constraints()
         ]
+
         for i in range(len(constraints)):
             if self.inequalities[i].get() == ">=":
                 constraints[i] = [-x for x in constraints[i]]
@@ -429,7 +429,8 @@ class Controls(tk.Frame):
         # TODO: Fix perform_simplex() to always return solution with correct
         #       number of coefficients. Now, the number of coefficients is
         #       equal to the number of constraints.
-        solution = perform_simplex(to_tableau(goal_function, constraints))
+        tableau = to_tableau(goal_function, constraints, mode)
+        solution = perform_simplex(tableau, mode)
         solution = (solution[0][:len(goal_function)], solution[1])
 
         if len(goal_function) == 2 and len(solution[0]) == 2:

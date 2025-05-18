@@ -129,6 +129,16 @@ class TestSimplex:
         assert get_solution(tableau) == ([8, 0], 24)
 
 
+    def test_get_solution_if_minimization(self):
+        tableau = [
+            [0, 1,  2, -1, 0,   8],
+            [1, 0, -1,  1, 0,   4],
+            [0, 0, 20, 10, 1, 400],
+        ]
+
+        assert get_solution(tableau, Mode.MINIMIZATION) == ([20, 10], 400)
+
+
     def test_get_solution_if_all_cols_are_basic_then_returns_valid_solution(self):
         tableau = [
             [0, 1, 2, -1, 0, 8],
@@ -167,6 +177,16 @@ class TestSimplex:
         ]
 
         assert perform_simplex(tableau) == ([float('inf'), float('inf')], float('inf'))
+
+
+    def test_perform_simplex_when_minimization(self):
+        tableau = [
+            [  1,   1, 1, 0, 0, 12],
+            [  2,   1, 0, 1, 0, 16],
+            [-40, -30, 0, 0, 1,  0],
+        ]
+
+        assert perform_simplex(tableau, Mode.MINIMIZATION) == ([20, 10], 400)
 
 
     def test_to_tableau_if_var_count_equals_constraint_count(self):
@@ -217,3 +237,72 @@ class TestSimplex:
         ]
 
         assert to_tableau(goal_function, constraints) == expected
+
+
+    def test_to_tableau_if_minimization_mode(self):
+        goal_function = [6.0, 4.0]
+        constraints = [
+            [-2, -1, -3],
+            [ 1, -2,  2],
+            [-3, -1,  0],
+            [ 1, -2, -1],
+        ]
+
+        expected = [
+            [ 2, -1, 3, -1, 1, 0, 0, 6],
+            [ 1,  2, 1,  2, 0, 1, 0, 4],
+            [-3,  2, 0, -1, 0, 0, 1, 0],
+        ]
+
+        assert to_tableau(goal_function, constraints, Mode.MINIMIZATION) == expected
+
+
+    def test_to_basic_matrix(self):
+        goal_function = [40.0, 30.0]
+        constraints = [
+            [1, 1, 12],
+            [2, 1, 16],
+            [0, 2, 11],
+        ]
+
+        expected = [
+            [ 1,  1, 12],
+            [ 2,  1, 16],
+            [ 0,  2, 11],
+            [40, 30,  0],
+        ]
+
+        assert to_basic_matrix(goal_function, constraints) == expected
+
+
+    def test_transpose_basic_matrix(self):
+        matrix = [
+            [ 1,  1, 12],
+            [ 2,  1, 16],
+            [ 0,  2, 11],
+            [40, 30,  0],
+        ]
+
+        expected = [
+            [ 1,  2,  0, 40],
+            [ 1,  1,  2, 30],
+            [12, 16, 11,  0],
+        ]
+
+        assert transpose_basic_matrix(matrix) == expected
+
+
+    def test_basic_matrix_to_tableau(self):
+        matrix = [
+            [ 1,  2,  0, 40],
+            [ 1,  1,  2, 30],
+            [12, 16, 11,  0],
+        ]
+
+        expected = [
+            [  1,   2,   0, 1, 0, 0, 40],
+            [  1,   1,   2, 0, 1, 0, 30],
+            [-12, -16, -11, 0, 0, 1,  0],
+        ]
+
+        assert basic_matrix_to_tableau(matrix) == expected
