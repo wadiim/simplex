@@ -7,15 +7,27 @@ from matplotlib.backends.backend_tkagg import (
         FigureCanvasTkAgg,
         NavigationToolbar2Tk
 )
+import matplotlib.colors as mcolors
 
 from simplex import *
 
 
 # TODO: Add plot's axes labels based on the currently set var names.
-# TODO: Colorize the constraints' functions with different colors.
 # TODO: Add solution's space colorization.
 # TODO: Add a diagram legend.
 class Plot(tk.Frame):
+
+    COLORS = [
+        'tab:blue',
+        'tab:orange',
+		'tab:green',
+		'tab:purple',
+		'tab:brown',
+		'tab:pink',
+		'tab:gray',
+		'tab:olive',
+		'tab:cyan',
+    ]
 
     def __init__(self, master):
         super().__init__(master)
@@ -43,39 +55,42 @@ class Plot(tk.Frame):
     def plot(self, goal_function, constraints, solution):
         assert len(goal_function) == 2
         assert len(solution[0]) == 2
+        assert len(constraints) < len(self.COLORS)
 
         self.ax.clear()
 
-        # Plot goal function
+        # Plot objective function
         point = solution[0]
+        obj_fun_color = mcolors.TABLEAU_COLORS[self.COLORS[0]]
         if solution[0] != [float('inf'), float('inf')]:
             if goal_function[0] != 0 and goal_function[1] != 0:
                 a = -goal_function[0] / goal_function[1]
                 b = point[1] - a*point[0]
                 xys = [(x, a*x + b) for x in range(2)]
-                self.ax.axline(xys[0], xys[1])
+                self.ax.axline(xys[0], xys[1], color=obj_fun_color)
             elif goal_function[0] == 0:
-                self.ax.axhline(point[1])
+                self.ax.axhline(point[1], color=obj_fun_color)
             else:
-                self.ax.axvline(point[0])
+                self.ax.axvline(point[0], color=obj_fun_color)
 
         # Plot constraints' lines
         constraints_data = []
-        for constraint in constraints:
+        for i, constraint in enumerate(constraints):
+            color = mcolors.TABLEAU_COLORS[self.COLORS[i+1]]
             if constraint[1] != 0:
                 a = -constraint[0] / constraint[1]
                 b = constraint[2] / constraint[1]
                 constraints_data.append((a, b))
-                self.ax.axline((0, b), (1, a+b), linestyle='--')
+                self.ax.axline((0, b), (1, a+b), linestyle='--', color=color)
             elif constraint[0] != 0:
                 b = constraint[2] / constraint[0]
                 constraints_data.append((0, b))
-                self.ax.axvline(b, linestyle='--')
+                self.ax.axvline(b, linestyle='--', color=color)
 
         # Draw the solution's point
         x, y = solution[0]
         if x != float('inf') and y != float('inf'):
-            self.ax.plot(x, y, marker='o', color='red')
+            self.ax.plot(x, y, marker='o', color=mcolors.TABLEAU_COLORS['tab:red'])
 
         self.ax.set_xlim(0)
         self.ax.set_ylim(0)
