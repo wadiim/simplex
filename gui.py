@@ -12,9 +12,8 @@ import matplotlib.colors as mcolors
 from simplex import *
 
 
-# TODO: Add plot's axes labels based on the currently set var names.
 # TODO: Add solution's space colorization.
-# TODO: Add a diagram legend.
+# TODO: Plot implicit contraint's lines (x=0 and y=0).
 class Plot(tk.Frame):
 
     COLORS = [
@@ -52,7 +51,7 @@ class Plot(tk.Frame):
         toolbar.pack(side=tkinter.TOP, fill=tkinter.X)
 
 
-    def plot(self, goal_function, constraints, solution):
+    def plot(self, goal_function, constraints, solution, var_names=[]):
         assert len(goal_function) == 2
         assert len(solution[0]) == 2
         assert len(constraints) < len(self.COLORS)
@@ -62,30 +61,57 @@ class Plot(tk.Frame):
         # Plot objective function
         point = solution[0]
         obj_fun_color = mcolors.TABLEAU_COLORS[self.COLORS[0]]
+        obj_fun_label = f"{goal_function[0]}{var_names[0]} + "\
+                f"{goal_function[1]}{var_names[1]} = 0"
         if solution[0] != [float('inf'), float('inf')]:
             if goal_function[0] != 0 and goal_function[1] != 0:
                 a = -goal_function[0] / goal_function[1]
                 b = point[1] - a*point[0]
                 xys = [(x, a*x + b) for x in range(2)]
-                self.ax.axline(xys[0], xys[1], color=obj_fun_color)
+                self.ax.axline(
+                    xys[0],
+                    xys[1],
+                    color=obj_fun_color,
+                    label=obj_fun_label,
+                )
             elif goal_function[0] == 0:
-                self.ax.axhline(point[1], color=obj_fun_color)
+                self.ax.axhline(
+                    point[1],
+                    color=obj_fun_color,
+                    label=obj_fun_label,
+                )
             else:
-                self.ax.axvline(point[0], color=obj_fun_color)
+                self.ax.axvline(
+                    point[0],
+                    color=obj_fun_color,
+                    label=obj_fun_label,
+                )
 
         # Plot constraints' lines
         constraints_data = []
         for i, constraint in enumerate(constraints):
             color = mcolors.TABLEAU_COLORS[self.COLORS[i+1]]
+            label = f"{constraint[0]}{var_names[0]} + "\
+                    f"{constraint[1]}{var_names[1]} = {constraint[2]}"
             if constraint[1] != 0:
                 a = -constraint[0] / constraint[1]
                 b = constraint[2] / constraint[1]
                 constraints_data.append((a, b))
-                self.ax.axline((0, b), (1, a+b), linestyle='--', color=color)
+                self.ax.axline(
+                    (0, b), (1, a+b),
+                    linestyle='--',
+                    color=color,
+                    label=label,
+                )
             elif constraint[0] != 0:
                 b = constraint[2] / constraint[0]
                 constraints_data.append((0, b))
-                self.ax.axvline(b, linestyle='--', color=color)
+                self.ax.axvline(
+                    b,
+                    linestyle='--',
+                    color=color,
+                    label=label
+                )
 
         # Draw the solution's point
         x, y = solution[0]
@@ -94,6 +120,8 @@ class Plot(tk.Frame):
 
         self.ax.set_xlim(0)
         self.ax.set_ylim(0)
+
+        self.ax.legend()
 
         self.canvas.draw()
 
@@ -449,7 +477,12 @@ class Controls(tk.Frame):
         solution = (solution[0][:len(goal_function)], solution[1])
 
         if len(goal_function) == 2 and len(solution[0]) == 2:
-            self.plot(goal_function, constraints, solution)
+            self.plot(
+                goal_function,
+                constraints,
+                solution,
+                self._get_var_names_as_strings(),
+            )
 
         self.solution.set(
             "("
@@ -536,6 +569,9 @@ class Controls(tk.Frame):
             return False
 
         return True
+
+    def _get_var_names_as_strings(self):
+        return [v.get() for v in self.var_names]
 
 
 if __name__ == '__main__':
