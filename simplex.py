@@ -123,12 +123,14 @@ def perform_simplex(
     """
 
     while can_be_improved(tableau):
+        print(tableau_to_str(tableau))
         if not perform_pivoting(tableau):
             return (
                 [float('inf') for _ in range(len(tableau[:-1]))],
                 float('inf'),
             )
 
+    print(tableau_to_str(tableau))
     return get_solution(tableau, mode)
 
 
@@ -208,3 +210,56 @@ def basic_matrix_to_tableau(
         result[-1].append(row[-1])
 
     return result
+
+
+def calc_num_widths(num: float) -> tuple[int, int]:
+    num_str_parts = str(num).split('.')
+    real_len = len(num_str_parts[0])
+    frac_len = len(num_str_parts[1]) if len(num_str_parts) > 1 else 0
+
+    return (real_len, frac_len)
+
+
+def calc_col_widths(tableau: list[list[float]]) -> list[int]:
+    widths = []
+
+    if len(tableau) > 0 and len(tableau[0]) == 0:
+        return [(0, 0)]
+
+    for row in tableau:
+        for i, val in enumerate(row):
+            real_len, frac_len = calc_num_widths(val)
+            while len(widths) <= i:
+                widths.append((real_len, frac_len))
+            if real_len > widths[i][0]:
+                widths[i] = (real_len, widths[i][1])
+            if frac_len > widths[i][1]:
+                widths[i] = (widths[i][0], frac_len)
+
+    return widths
+
+
+def tableau_to_str(tableau: list[list[float]]):
+    widths = calc_col_widths(tableau)
+    total_width = 0
+    for w in widths:
+        total_width += w[0] + w[1] + (1 if w[1] > 0 else 0)
+    total_width += (len(widths) - 1) * len(", ")
+    total_width = max(1, total_width)
+
+    ret = "┌" + (" "*total_width) + "┐\n"
+    if len(tableau) > 0 and len(tableau[0]) > 0:
+        for row in tableau:
+            ret += "│"
+            row_strs = []
+            for i, v in enumerate(row):
+                real_len, frac_len = calc_num_widths(v)
+                row_strs.append(
+                        (" "*(widths[i][0] - real_len))
+                        + f"{v:.{widths[i][1]}f}"
+                )
+            ret += ", ".join([s for s in row_strs])
+            ret += "│\n"
+    ret += "└" + (" "*total_width) + "┘"
+
+    return ret

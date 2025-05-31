@@ -306,3 +306,117 @@ class TestSimplex:
         ]
 
         assert basic_matrix_to_tableau(matrix) == expected
+
+
+    def test_calc_col_widths_if_empty_tableau_then_returns_single_0(self):
+        assert calc_col_widths([[]]) == [(0, 0)]
+
+
+    def test_calc_col_widths_when_single_row(self):
+        assert calc_col_widths([[0, 2, 1337, 42]]) \
+                == [(1, 0), (1, 0), (4, 0), (2, 0)]
+
+
+    def test_calc_col_widths_when_multiple_rows(self):
+        tableau = [
+            [1,     2,  42],
+            [1337,  8,   0],
+            [0,    16, 111],
+        ]
+
+        assert calc_col_widths(tableau) == [(4, 0), (2, 0), (3, 0)]
+
+
+    def test_calc_col_widths_when_negative_values(self):
+        tableau = [
+            [    1, -2,  -42],
+            [-1337,  8,    0],
+            [    0, 16, 1111],
+        ]
+
+        assert calc_col_widths(tableau) == [(5, 0), (2, 0), (4, 0)]
+
+
+    def test_calc_col_widths_when_floating_point_values(self):
+        tableau = [
+            [    1.0, -2,    -42.04],
+            [-1337,    8,      0.1 ],
+            [    0,   16.0, 1111   ],
+        ]
+
+        assert calc_col_widths(tableau) == [(5, 1), (2, 1), (4, 2)]
+
+
+    def test_tableau_to_str_when_empty_tableau(self):
+        expected =\
+            "┌ ┐\n"\
+            "└ ┘"
+
+        assert tableau_to_str([[]]) == expected
+
+
+    def test_tableau_to_str_when_single_element(self):
+        expected =\
+            "┌ ┐\n"\
+            "│2│\n"\
+            "└ ┘"
+
+        assert tableau_to_str([[2]]) == expected
+
+
+    def test_tableau_to_str_when_single_row(self):
+        tableau = [[0, 2, 1337, 42]]
+        expected =\
+            "┌              ┐\n"\
+            "│0, 2, 1337, 42│\n"\
+            "└              ┘"
+
+        assert tableau_to_str(tableau) == expected
+
+
+    def test_tableau_to_str_when_multiple_rows(self):
+        tableau = [
+            [1,     2,  42],
+            [1337,  8,   0],
+            [0,    16, 111],
+        ]
+        expected =\
+            "┌             ┐\n"\
+            "│   1,  2,  42│\n"\
+            "│1337,  8,   0│\n"\
+            "│   0, 16, 111│\n"\
+            "└             ┘"
+
+        assert tableau_to_str(tableau) == expected
+
+
+    def test_tableau_to_str_when_negative_values(self):
+        tableau = [
+            [    1, -2,  -42],
+            [-1337,  8,    0],
+            [    0, 16, 1111],
+        ]
+        expected =\
+            "┌               ┐\n"\
+            "│    1, -2,  -42│\n"\
+            "│-1337,  8,    0│\n"\
+            "│    0, 16, 1111│\n"\
+            "└               ┘"
+
+        assert tableau_to_str(tableau) == expected
+
+
+    def test_tableau_to_str_when_floating_point_values(self):
+        tableau = [
+            [    1.0, -2,    -42.04],
+            [-1337,    8,      0.1 ],
+            [    0,   16.0, 1111   ],
+        ]
+        expected =\
+            "┌                      ┐\n"\
+            "│    1.0, -2.0,  -42.04│\n"\
+            "│-1337.0,  8.0,    0.10│\n"\
+            "│    0.0, 16.0, 1111.00│\n"\
+            "└                      ┘"
+
+        assert tableau_to_str(tableau) == expected
