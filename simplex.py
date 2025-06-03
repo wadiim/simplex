@@ -3,6 +3,7 @@ This file contains the implementation of the simplex method.
 """
 
 from enum import Enum, auto
+from termcolor import colored
 
 
 class Mode(Enum):
@@ -55,9 +56,13 @@ def perform_pivoting(tableau: list[list[float]]) -> bool:
     if pos == None: return False
     pivot_row_idx, pivot_col_idx = pos
 
+    print(tableau_to_str(tableau, pos))
+
     # Make the pivot element a 1:
     pivot = tableau[pivot_row_idx][pivot_col_idx]
     tableau[pivot_row_idx] = [x/pivot for x in tableau[pivot_row_idx]]
+
+    print(tableau_to_str(tableau))
 
     # Make all other entries 0 in the pivot column:
     for row_idx in range(len(tableau)):
@@ -123,7 +128,6 @@ def perform_simplex(
     """
 
     while can_be_improved(tableau):
-        print(tableau_to_str(tableau))
         if not perform_pivoting(tableau):
             return (
                 [float('inf') for _ in range(len(tableau[:-1]))],
@@ -239,7 +243,7 @@ def calc_col_widths(tableau: list[list[float]]) -> list[int]:
     return widths
 
 
-def tableau_to_str(tableau: list[list[float]]):
+def tableau_to_str(tableau: list[list[float]], pivot_pos=(-1, -1)):
     widths = calc_col_widths(tableau)
     total_width = 0
     for w in widths:
@@ -249,16 +253,22 @@ def tableau_to_str(tableau: list[list[float]]):
 
     ret = "┌" + (" "*total_width) + "┐\n"
     if len(tableau) > 0 and len(tableau[0]) > 0:
-        for row in tableau:
+        for i, row in enumerate(tableau):
             ret += "│"
             row_strs = []
-            for i, v in enumerate(row):
+            for j, v in enumerate(row):
                 real_len, frac_len = calc_num_widths(v)
                 row_strs.append(
-                        (" "*(widths[i][0] - real_len))
-                        + f"{v:.{widths[i][1]}f}"
+                        (" "*(widths[j][0] - real_len))
+                        + f"{v:.{widths[j][1]}f}"
                 )
-            ret += ", ".join([s for s in row_strs])
+            if i == pivot_pos[0]:
+                ret += colored(", ".join(s for s in row_strs), 'black', 'on_blue')
+            else:
+                ret += ", ".join([colored(s, 'black', 'on_blue')
+                    if k == pivot_pos[1] else s for k, s
+                        in enumerate(row_strs)]
+                )
             ret += "│\n"
     ret += "└" + (" "*total_width) + "┘"
 
