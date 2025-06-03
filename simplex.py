@@ -165,7 +165,9 @@ def to_tableau(
             # `<=` -> `>=`
             constraints[i] = [-x for x in constraints[i]]
         matrix = to_basic_matrix(goal_function, constraints)
+        print(tableau_to_str(matrix))
         matrix = transpose_basic_matrix(matrix)
+        print(tableau_to_str(matrix))
         result = basic_matrix_to_tableau(matrix)
     else:
         for i, constraint in enumerate(constraints):
