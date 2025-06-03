@@ -56,7 +56,7 @@ def perform_pivoting(tableau: list[list[float]]) -> bool:
     if pos == None: return False
     pivot_row_idx, pivot_col_idx = pos
 
-    print(tableau_to_str(tableau, pos))
+    print(tableau_to_str(tableau, pivot_pos=pos))
 
     # Make the pivot element a 1:
     pivot = tableau[pivot_row_idx][pivot_col_idx]
@@ -96,12 +96,15 @@ def get_solution(
     """
 
     solution = []
+    sol_idxs = set()
 
     if mode == Mode.MINIMIZATION:
         var_count = len(tableau) - 1
         var_start_idx = len(tableau[-1]) - var_count - 2
+        sol_idxs.add((var_start_idx, len(tableau) - 1))
         for i in range(var_count):
             solution.append(tableau[-1][var_start_idx + i])
+            sol_idxs.add((len(tableau) - 1, var_start_idx + i))
     else:
         for col_idx in range(len(tableau[:-1])):
             column = [tableau[r][col_idx] for r in range(len(tableau))]
@@ -109,8 +112,11 @@ def get_solution(
             if is_basic(column):
                 one_index = column.index(1)
                 partial_solution = tableau[one_index][-1]
+                sol_idxs.add((one_index, len(tableau[one_index]) - 1))
             solution.append(partial_solution)
 
+    sol_idxs.add((len(tableau) - 1, len(tableau[-1]) - 1))
+    print(tableau_to_str(tableau, sol_idxs=sol_idxs))
     return solution, tableau[-1][-1]
 
 
@@ -134,7 +140,6 @@ def perform_simplex(
                 float('inf'),
             )
 
-    print(tableau_to_str(tableau))
     return get_solution(tableau, mode)
 
 
@@ -243,7 +248,7 @@ def calc_col_widths(tableau: list[list[float]]) -> list[int]:
     return widths
 
 
-def tableau_to_str(tableau: list[list[float]], pivot_pos=(-1, -1)):
+def tableau_to_str(tableau: list[list[float]], **kwargs):
     widths = calc_col_widths(tableau)
     total_width = 0
     for w in widths:
@@ -258,16 +263,25 @@ def tableau_to_str(tableau: list[list[float]], pivot_pos=(-1, -1)):
             row_strs = []
             for j, v in enumerate(row):
                 real_len, frac_len = calc_num_widths(v)
-                row_strs.append(
-                        (" "*(widths[j][0] - real_len))
-                        + f"{v:.{widths[j][1]}f}"
-                )
-            if i == pivot_pos[0]:
+                if 'sol_idxs' in kwargs and (i, j) in kwargs['sol_idxs']:
+                    row_strs.append(
+                            colored(
+                                (" "*(widths[j][0] - real_len))
+                                + f"{v:.{widths[j][1]}f}",
+                                'black', 'on_blue'
+                            )
+                    )
+                else:
+                    row_strs.append(
+                            (" "*(widths[j][0] - real_len))
+                            + f"{v:.{widths[j][1]}f}"
+                    )
+            if 'pivot_pos' in kwargs and i == kwargs['pivot_pos'][0]:
                 ret += colored(", ".join(s for s in row_strs), 'black', 'on_blue')
             else:
                 ret += ", ".join([colored(s, 'black', 'on_blue')
-                    if k == pivot_pos[1] else s for k, s
-                        in enumerate(row_strs)]
+                    if 'pivot_pos' in kwargs and k == kwargs['pivot_pos'][1]
+                    else s for k, s in enumerate(row_strs)]
                 )
             ret += "│\n"
     ret += "└" + (" "*total_width) + "┘"
