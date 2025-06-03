@@ -465,8 +465,12 @@ class Controls(tk.Frame):
                 for y in self.get_constraints()
         ]
 
+        inequalities = [x.get() for x in self.inequalities]
+
+        print_problem(goal_function, mode, constraints, inequalities)
+
         for i in range(len(constraints)):
-            if self.inequalities[i].get() == ">=":
+            if inequalities[i] == ">=":
                 constraints[i] = [-x for x in constraints[i]]
 
         # TODO: Fix perform_simplex() to always return solution with correct
@@ -572,6 +576,21 @@ class Controls(tk.Frame):
 
     def _get_var_names_as_strings(self):
         return [v.get() for v in self.var_names]
+
+
+def print_problem(
+        goal_function: list[float],
+        mode: Mode,
+        constraints: list[list[float]],
+        inequalities: list[str],
+):
+    mode_str = "max" if mode == Mode.MAXIMIZATION else "min"
+    goal_fun_str = " + ".join([str(x) for x in goal_function])
+
+    print(f"{goal_fun_str} →  {mode_str}")
+    for i, constraint in enumerate(constraints):
+        constraint_str = " + ".join([str(x) for x in constraint[:-1]])
+        print(f"{constraint_str} {inequalities[i]} {constraint[-1]}")
 
 
 if __name__ == '__main__':
