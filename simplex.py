@@ -117,6 +117,7 @@ def get_solution(
 
     sol_idxs.add((len(tableau) - 1, len(tableau[-1]) - 1))
     print(tableau_to_str(tableau, sol_idxs=sol_idxs))
+    print(f"f({", ".join([str(x) for x in solution])}) = {tableau[-1][-1]}\n")
     return solution, tableau[-1][-1]
 
 
