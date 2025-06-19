@@ -267,6 +267,8 @@ class Controls(tk.Frame):
             pady=self.BASE_PADDING,
         )
 
+        self._update_focus_order()
+
 
     def decrement_var_count(self, _):
         if len(self.var_entry_frames) <= self.MIN_VAR_COUNT: return
@@ -354,6 +356,8 @@ class Controls(tk.Frame):
             _, terms, _ = constraint
             self.add_constraint_term(terms, i+1)
 
+        self._update_focus_order()
+
 
     def decrement_constraint_count(self, event=None):
         if len(self.constraints) <= self.MIN_CONSTRAINT_COUNT: return
@@ -417,6 +421,8 @@ class Controls(tk.Frame):
         self.constraints.append(
             (constraint_label, constraint_terms, constraint_rhs_frame)
         )
+
+        self._update_focus_order()
 
 
     def add_constraint_term(self, constraint_terms, constraint_id):
@@ -574,8 +580,20 @@ class Controls(tk.Frame):
 
         return True
 
+
     def _get_var_names_as_strings(self):
         return [v.get() for v in self.var_names]
+
+
+    def _update_focus_order(self):
+        for frame in self.var_entry_frames:
+            frame.lift()
+        for term in self.goal_func_terms:
+            term.lift()
+        for constraint in self.constraints:
+            for term in constraint[1]:
+                term.lift()
+            constraint[2].lift()
 
 
 def print_problem(
